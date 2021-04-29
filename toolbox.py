@@ -299,11 +299,13 @@ def _create_table(column_names, columns_descriptions, values):
             elif isinstance(v[0][0], float):
                 args = {'name': cn, 'description': cd, 'values': v}
                 columns.append(_create_column(data_type='double_array', kwargs=args))
-        elif isinstance(v[0], model.ImageI):
-            args = {'name': cn, 'description': cd, 'values': v}
+            else:
+                raise Exception(f'Could not detect column datatype for array of {v[0][0]}')
+        elif isinstance(v[0], gw._ImageWrapper):
+            args = {'name': cn, 'description': cd, 'values': [i.getId() for i in v]}
             columns.append(_create_column(data_type='image', kwargs=args))
-        elif isinstance(v[0], model.RoiI):
-            args = {'name': cn, 'description': cd, 'values': v}
+        elif isinstance(v[0], gw._RoiWrapper):
+            args = {'name': cn, 'description': cd, 'values': [r.getId() for r in v]}
             columns.append(_create_column(data_type='roi', kwargs=args))
 
         else:
