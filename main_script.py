@@ -8,13 +8,13 @@ from skimage.segmentation import clear_border
 from skimage.measure import label, regionprops
 
 import toolbox as omero
-from getpass import getpass
 import argh
 
 logging.basicConfig(level='INFO')
 logger = logging.getLogger(__name__)
 
-TEMP_DIR = '/home/ubuntu/data/mydatalocal'
+# TEMP_DIR = '/home/ubuntu/data/mydatalocal'
+TEMP_DIR = '/home/julio/temp'
 ILASTIK_PATH = '/opt/ilastik-1.3.3post3-Linux/run_ilastik.sh'
 THRESHOLD = 200
 CLOSING_DISTANCE = 10
@@ -77,10 +77,9 @@ def analyze_image(image, model):
     cleared = clear_border(closed)
 
     labels = label(cleared)
-
     labels = np.expand_dims(labels, axis=(1, 2))
-
     regions = regionprops(labels, raw_intensities[:, CHANNEL_OF_INTEREST, 0, ...])
+
     return regions
 
 
@@ -141,6 +140,7 @@ def run(user, password, group, dataset_id: int, host='omero.mri.cnrs.fr'):
                                               column_descriptions=[[] for _ in range(len(measurements))],
                                               values=[v for _, v in measurements.items()],
                                               )
+        omero.link_annotation(dataset, table)
 
     finally:
         conn.close()
