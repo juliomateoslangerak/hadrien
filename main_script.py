@@ -77,7 +77,7 @@ def analyze_image(image, model):
     cleared = clear_border(closed)
 
     labels = label(cleared)
-    labels = np.expand_dims(labels, axis=(1, 2))
+    # labels = np.expand_dims(labels, axis=(1, 2))
     regions = regionprops(labels, raw_intensities[:, CHANNEL_OF_INTEREST, 0, ...])
 
     return regions
