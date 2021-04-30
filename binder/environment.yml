@@ -1,0 +1,40 @@
+name: omero-basic
+channels:
+  - ome
+  - anaconda
+  - conda-forge
+  # - ilastik-forge
+  # - ilastik-forge/label/ilastik133
+dependencies:
+  # - numba==0.48.0
+  - python=3.6
+  - omero-py  # ome
+  - pip
+  # ilastik
+  # - greenlet
+  # - grpcio
+  # - h5py
+  # - psutil
+  # - tifffile
+  - scikit-image
+  - pandas
+  - numpy
+  # - scikit-learn
+  # - vigra
+  # - z5py
+  # - ilastik-forge/label/ilastik133::elf  # ilastik-forge
+  # - fastfilters  # ilastik-forge
+  # - hytra # ilastik-forge
+  # - ilastik-forge/label/ilastik133::ilastikrag # ilastik-forge
+  # - ilastik-forge/label/ilastik133::ilastiktools # ilastik-forge
+  # - ilastik-forge/label/ilastik133::ilastik-feature-selection  # ilastik-forge
+  # - ilastik-meta==1.4.0b5  # ilastik-forge
+  # - ilastik-forge/label/ilastik133::mamutexport  # ilastik-forge
+  # - ilastik-forge/label/ilastik133::ndstructs  # ilastik-forge
+  # - ilastik-forge::tiktorch  # ilastik-forge
+  - pip:
+    - omero-rois
+    - argh
+    # - yapsy
+    # - itkwidgets
+    # - ome-zarr
