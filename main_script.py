@@ -107,7 +107,6 @@ def run(user, password, group, dataset_id: int, host='omero.mri.cnrs.fr'):
                         'centroid': [],
                         'weighted_centroid': [],
                         'equivalent_diameter': [],
-                        'feret_diameter_max': [],
                         'major_axis_length': [],
                         'minor_axis_length': [],
                         'solidity': [],
@@ -129,6 +128,8 @@ def run(user, password, group, dataset_id: int, host='omero.mri.cnrs.fr'):
                 measurements['image'].append(image)
                 measurements['roi'].append(roi)
                 for k, v in measurements.items():
+                    if k in ('image', 'roi'):
+                        continue
                     try:
                         v.append(getattr(region, k))
                     except AttributeError:
@@ -137,7 +138,7 @@ def run(user, password, group, dataset_id: int, host='omero.mri.cnrs.fr'):
         table = omero.create_annotation_table(conn,
                                               table_name='Measurements',
                                               column_names=[k for k, _ in measurements.items()],
-                                              column_descriptions=[[] for _ in range(len(measurements))],
+                                              column_descriptions=['' for _ in range(len(measurements))],
                                               values=[v for _, v in measurements.items()],
                                               )
         omero.link_annotation(dataset, table)

@@ -17,6 +17,11 @@ from scipy.spatial.distance import cdist
 import numpy as np
 from itertools import permutations
 
+import logging
+logging.basicConfig(level='INFO')
+logger = logging.getLogger(__name__)
+
+
 
 COLUMN_TYPES = {'string': grid.StringColumn,
                 'long': grid.LongColumn,
@@ -153,16 +158,12 @@ def get_intensities(image, z_range=None, c_range=None, t_range=None, x_range=Non
     else:
         data_type = pixels_type.value
 
-    intensities = np.zeros((nr_planes,
-                            output_shape[3],
-                            output_shape[4]),
-                           dtype=data_type)
     if whole_planes:
-        np.stack(list(pixels.getPlanes(zctList=zct_list)), out=intensities)
+        intensities = np.stack(list(pixels.getPlanes(zctList=zct_list)))
     else:
         tile_region = (ranges[3].start, ranges[4].start, len(ranges[3]), len(ranges[4]))
         zct_tile_list = [(z, c, t, tile_region) for z, c, t in zct_list]
-        np.stack(list(pixels.getTiles(zctTileList=zct_tile_list)), out=intensities)
+        intensities = np.stack(list(pixels.getTiles(zctTileList=zct_tile_list)))
 
     intensities = np.reshape(intensities, newshape=output_shape)
 
@@ -286,26 +287,38 @@ def _create_table(column_names, columns_descriptions, values):
         elif isinstance(v[0], int):
             args = {'name': cn, 'description': cd, 'values': v}
             columns.append(_create_column(data_type='long', kwargs=args))
+        elif isinstance(v[0], np.integer):
+            args = {'name': cn, 'description': cd, 'values': [i.item() for i in v]}
+            columns.append(_create_column(data_type='long', kwargs=args))
         elif isinstance(v[0], float):
             args = {'name': cn, 'description': cd, 'values': v}
+            columns.append(_create_column(data_type='double', kwargs=args))
+        elif isinstance(v[0], np.float):
+            args = {'name': cn, 'description': cd, 'values': [i.item() for i in v]}
             columns.append(_create_column(data_type='double', kwargs=args))
         elif isinstance(v[0], bool):
             args = {'name': cn, 'description': cd, 'values': v}
             columns.append(_create_column(data_type='string', kwargs=args))
         elif isinstance(v[0], list) or isinstance(v[0], tuple):
             if isinstance(v[0][0], int):
-                args = {'name': cn, 'description': cd, 'values': v}
+                args = {'name': cn, 'description': cd, 'size': len(v[0]), 'values': [[i for i in a] for a in v]}
+                columns.append(_create_column(data_type='long_array', kwargs=args))
+            elif isinstance(v[0][0], np.integer):
+                args = {'name': cn, 'description': cd, 'size': len(v[0]), 'values': [[i.item() for i in a] for a in v]}
                 columns.append(_create_column(data_type='long_array', kwargs=args))
             elif isinstance(v[0][0], float):
-                args = {'name': cn, 'description': cd, 'values': v}
+                args = {'name': cn, 'description': cd, 'size': len(v[0]), 'values': [[i for i in a] for a in v]}
+                columns.append(_create_column(data_type='double_array', kwargs=args))
+            elif isinstance(v[0][0], np.float):
+                args = {'name': cn, 'description': cd, 'size': len(v[0]), 'values': [[i.item() for i in a] for a in v]}
                 columns.append(_create_column(data_type='double_array', kwargs=args))
             else:
                 raise Exception(f'Could not detect column datatype for array of {v[0][0]}')
         elif isinstance(v[0], gw._ImageWrapper):
             args = {'name': cn, 'description': cd, 'values': [i.getId() for i in v]}
             columns.append(_create_column(data_type='image', kwargs=args))
-        elif isinstance(v[0], gw._RoiWrapper):
-            args = {'name': cn, 'description': cd, 'values': [r.getId() for r in v]}
+        elif isinstance(v[0], model.RoiI):
+            args = {'name': cn, 'description': cd, 'values': [r.getId().val for r in v]}
             columns.append(_create_column(data_type='roi', kwargs=args))
 
         else:
@@ -316,6 +329,10 @@ def _create_table(column_names, columns_descriptions, values):
 
 def create_annotation_table(connection, table_name, column_names, column_descriptions, values, namespace=None, description=None):
     """Creates a table annotation from a list of lists"""
+
+    if len(values) == 0 or len(values[0]) == 0:
+        logger.warning('Table provided has no data. Returning None')
+        return None
 
     table_name = f'{table_name}_{"".join([choice(ascii_letters) for n in range(32)])}.h5'
 
